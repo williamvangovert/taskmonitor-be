@@ -26,6 +26,20 @@ class DashboardController extends Controller
                                         ->where('is_completed', false)->count(),
             'completion_rate'     => $rate,
             'active_users'        => User::where('updated_at', '>=', now()->subDays(7))->count(),
+            // Tambahan untuk diagram
+            'status_distribution' => [
+                'pending'     => TimelineRequirement::where('status', 'pending')->count(),
+                'in_progress' => TimelineRequirement::where('status', 'in_progress')->count(),
+                'review'      => TimelineRequirement::where('status', 'review')->count(),
+                'completed'   => TimelineRequirement::where('status', 'completed')->count(),
+                'overdue'     => TimelineRequirement::where('status', 'overdue')->count(),
+            ],
+            'priority_distribution' => [
+                'rendah'   => TimelineRequirement::where('priority', 'rendah')->count(),
+                'sedang'   => TimelineRequirement::where('priority', 'sedang')->count(),
+                'penting'  => TimelineRequirement::where('priority', 'penting')->count(),
+                'mendesak' => TimelineRequirement::where('priority', 'mendesak')->count(),
+            ]
         ]);
     }
 
@@ -40,7 +54,7 @@ class DashboardController extends Controller
             ->orderBy('due_date')
             ->get()
             ->map(function ($req) {
-                $req->days_late = now()->diffInDays($req->due_date);
+                $req->days_late = (int) now()->diffInDays($req->due_date);
                 return $req;
             });
 
@@ -55,7 +69,7 @@ class DashboardController extends Controller
             ->orderBy('due_date')
             ->get()
             ->map(function ($req) {
-                $req->days_until = now()->diffInDays($req->due_date);
+                $req->days_until = (int) now()->diffInDays($req->due_date);
                 return $req;
             });
 
