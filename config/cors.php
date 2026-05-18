@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['taskmonitor-fe.vercel.app'],
+    'allowed_origins' => ['http://localhost:3000','http://localhost:5173', 'https://taskmonitor-fe.vercel.app'],
 
     'allowed_origins_patterns' => [],
 

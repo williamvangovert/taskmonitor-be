@@ -24,6 +24,8 @@ class DashboardController extends Controller
             'overdue_count'       => TimelineRequirement::where('status', 'overdue')->count(),
             'upcoming_deadlines'  => TimelineRequirement::whereBetween('due_date', [now(), now()->addDays(7)])
                                         ->where('is_completed', false)->count(),
+            'critical_deadlines'  => TimelineRequirement::whereBetween('due_date', [now(), now()->addDays(2)])
+                                        ->where('is_completed', false)->count(),
             'completion_rate'     => $rate,
             'active_users'        => User::where('updated_at', '>=', now()->subDays(7))->count(),
             // Tambahan untuk diagram
@@ -74,5 +76,20 @@ class DashboardController extends Controller
             });
 
         return response()->json($upcoming);
+    }
+
+    public function critical()
+    {
+        $critical = TimelineRequirement::with(['timeline.project', 'assignedUser'])
+            ->whereBetween('due_date', [now(), now()->addDays(2)])
+            ->where('is_completed', false)
+            ->orderBy('due_date')
+            ->get()
+            ->map(function ($req) {
+                $req->days_until = (int) now()->diffInDays($req->due_date);
+                return $req;
+            });
+
+        return response()->json($critical);
     }
 }
