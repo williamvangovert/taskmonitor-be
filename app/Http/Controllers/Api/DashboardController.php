@@ -19,7 +19,6 @@ class DashboardController extends Controller
             SUM(CASE WHEN is_completed = true THEN 1 ELSE 0 END) as completed,
             SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
             SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
-            SUM(CASE WHEN status = 'review' THEN 1 ELSE 0 END) as review,
             SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as status_completed,
             SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue,
             SUM(CASE WHEN priority = 'rendah' THEN 1 ELSE 0 END) as rendah,
@@ -47,7 +46,6 @@ class DashboardController extends Controller
             'status_distribution' => [
                 'pending'     => $reqStats->pending,
                 'in_progress' => $reqStats->in_progress,
-                'review'      => $reqStats->review,
                 'completed'   => $reqStats->status_completed,
                 'overdue'     => $reqStats->overdue,
             ],

@@ -60,7 +60,7 @@ class TimelineRequirementController extends Controller
             'assigned_to'         => 'nullable|exists:users,id',
             'due_date'            => 'sometimes|date',
             'priority'            => 'in:rendah,sedang,penting,mendesak',
-            'status'              => 'in:pending,in_progress,review,completed,overdue',
+            'status'              => 'in:pending,in_progress,completed,overdue',
             'progress_percentage' => 'integer|min:0|max:100',
             'is_completed'        => 'boolean',
         ]);
