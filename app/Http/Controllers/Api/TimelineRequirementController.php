@@ -10,14 +10,15 @@ use Illuminate\Http\Request;
 class TimelineRequirementController extends Controller
 {
     public function index(ProjectTimeline $timeline)
-    {
-        $requirements = $timeline->requirements()
-            ->with('assignedUser')
-            ->orderBy('due_date')
-            ->get();
+{
+    $requirements = $timeline->requirements()
+        ->with('assignedUser:id,name,email') // ambil kolom spesifik saja
+        ->orderBy('due_date')
+        ->limit(100) // tambah limit
+        ->get();
 
-        return response()->json($requirements);
-    }
+    return response()->json($requirements);
+}
 
     public function store(Request $request, ProjectTimeline $timeline)
     {

@@ -8,12 +8,15 @@ use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $projects = Project::with(['creator', 'timelines'])
+        $projects = Project::with([
+            'creator:id,name,email',
+            'timelines:id,project_id,title,status,end_date'
+        ])
             ->withCount('timelines')
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(10);
 
         return response()->json($projects);
     }
@@ -39,7 +42,10 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['creator', 'timelines.requirements']);
+        $project->load([
+            'creator:id,name,email',
+            'timelines.requirements'
+        ]);
 
         return response()->json($project);
     }

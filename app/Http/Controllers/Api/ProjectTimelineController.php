@@ -10,14 +10,15 @@ use Illuminate\Http\Request;
 class ProjectTimelineController extends Controller
 {
     public function index(Project $project)
-    {
-        $timelines = $project->timelines()
-            ->withCount('requirements')
-            ->orderBy('start_date')
-            ->get();
+{
+    $timelines = $project->timelines()
+        ->withCount('requirements')
+        ->orderBy('start_date')
+        ->limit(100) // tambah limit
+        ->get();
 
-        return response()->json($timelines);
-    }
+    return response()->json($timelines);
+}
 
     public function store(Request $request, Project $project)
     {
