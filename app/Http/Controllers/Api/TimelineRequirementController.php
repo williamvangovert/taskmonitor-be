@@ -58,6 +58,8 @@ class TimelineRequirementController extends Controller
             'title'               => 'sometimes|string|max:255',
             'description'         => 'nullable|string',
             'assigned_to'         => 'nullable|exists:users,id',
+            'start_date'          => 'nullable|date',
+            'end_date'            => 'nullable|date',
             'due_date'            => 'sometimes|date',
             'priority'            => 'in:rendah,sedang,penting,mendesak',
             'status'              => 'in:pending,in_progress,completed,overdue',
