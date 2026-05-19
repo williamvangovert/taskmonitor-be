@@ -13,7 +13,7 @@ class ProjectController extends Controller
         $query = Project::with([
             'creator:id,name,email',
             'timelines:id,project_id,title,status,end_date'
-        ])->withCount('timelines');
+        ])->withCount(['timelines', 'requirements']);
 
         if ($request->has('status') && $request->status !== 'all') {
             if ($request->status === 'overdue') {

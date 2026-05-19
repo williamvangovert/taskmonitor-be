@@ -20,6 +20,11 @@ class Project extends Model
         return $this->hasMany(ProjectTimeline::class);
     }
 
+    public function requirements(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(TimelineRequirement::class, ProjectTimeline::class, 'project_id', 'timeline_id');
+    }
+
     public function recalculateProgress(): void
     {
         $totalTimelines = $this->timelines()->count();
