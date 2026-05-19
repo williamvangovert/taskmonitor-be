@@ -76,7 +76,7 @@ class DashboardController extends Controller
             ->limit(50) // ambil 50 saja
             ->get()
             ->map(function ($req) {
-                $req->days_late = (int) now()->diffInDays($req->due_date);
+                $req->days_late = (int) now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($req->due_date)->startOfDay());
                 return $req;
             });
 
@@ -96,7 +96,7 @@ class DashboardController extends Controller
             ->limit(50) // ambil 50 saja
             ->get()
             ->map(function ($req) {
-                $req->days_until = (int) now()->diffInDays($req->due_date);
+                $req->days_until = (int) now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($req->due_date)->startOfDay());
                 return $req;
             });
 
@@ -116,7 +116,7 @@ class DashboardController extends Controller
             ->limit(20) // ambil 20 saja
             ->get()
             ->map(function ($req) {
-                $req->days_until = (int) now()->diffInDays($req->due_date);
+                $req->days_until = (int) now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($req->due_date)->startOfDay());
                 return $req;
             });
 
