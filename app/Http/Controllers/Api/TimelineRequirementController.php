@@ -82,16 +82,12 @@ class TimelineRequirementController extends Controller
                 ->update(['status' => 'in_progress']);
         }
 
-        $timeline->recalculateProgress();
-
         return response()->json($requirement);
     }
 
     public function destroy(ProjectTimeline $timeline, TimelineRequirement $requirement)
     {
         $requirement->delete();
-        $timeline->recalculateProgress();
-
         return response()->json(['message' => 'Requirement berhasil dihapus.']);
     }
 }
