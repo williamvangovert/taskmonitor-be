@@ -10,13 +10,20 @@ class ProjectController extends Controller
 {
     public function index(Request $request)
     {
-        $projects = Project::with([
+        $query = Project::with([
             'creator:id,name,email',
             'timelines:id,project_id,title,status,end_date'
-        ])
-            ->withCount('timelines')
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        ])->withCount('timelines');
+
+        if ($request->has('status') && $request->status !== 'all') {
+            if ($request->status === 'overdue') {
+                $query->where('end_date', '<', now())->where('status', '!=', 'completed');
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
+
+        $projects = $query->orderByDesc('created_at')->paginate(10);
 
         return response()->json($projects);
     }
