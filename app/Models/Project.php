@@ -27,13 +27,14 @@ class Project extends Model
 
     public function recalculateProgress(): void
     {
-        $totalTimelines = $this->timelines()->count();
-        if ($totalTimelines === 0) {
-            $this->update(['progress_percentage' => 0]);
-            return;
-        }
+        $stats = $this->timelines()
+            ->selectRaw('COUNT(*) as total, AVG(progress_percentage) as avg_progress')
+            ->first();
 
-        $averageProgress = $this->timelines()->avg('progress_percentage');
-        $this->update(['progress_percentage' => (int) round($averageProgress)]);
+        $this->update([
+            'progress_percentage' => ($stats->total > 0)
+                ? (int) round($stats->avg_progress)
+                : 0
+        ]);
     }
 }

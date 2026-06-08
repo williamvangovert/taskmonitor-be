@@ -30,23 +30,36 @@ class CheckOverdueTasks extends Command
         $overdueTasks = TimelineRequirement::where('is_completed', false)
             ->where('due_date', '<', now())
             ->where('status', '!=', 'overdue')
-            ->get();
+            ->get(['id', 'title', 'due_date', 'assigned_to']);
 
-        foreach ($overdueTasks as $task) {
-            $task->update(['status' => 'overdue']);
-
-            if ($task->assigned_to) {
-                Notification::create([
-                    'user_id' => $task->assigned_to,
-                    'title'   => 'Tugas Terlambat',
-                    'message' => "Tugas '{$task->title}' telah melewati batas waktu (Deadline: {$task->due_date->format('d M Y')}).",
-                    'type'    => 'overdue',
-                ]);
-            }
-            
-            $this->info("Task marked as overdue: {$task->title}");
+        if ($overdueTasks->isEmpty()) {
+            $this->info('No overdue tasks found.');
+            return;
         }
 
-        $this->info('Overdue tasks check completed.');
+        // Bulk update status in 1 query
+        TimelineRequirement::whereIn('id', $overdueTasks->pluck('id'))
+            ->update(['status' => 'overdue']);
+
+        // Bulk insert notifications in 1 query
+        $notifications = $overdueTasks
+            ->filter(fn($task) => $task->assigned_to)
+            ->map(fn($task) => [
+                'user_id'    => $task->assigned_to,
+                'title'      => 'Tugas Terlambat',
+                'message'    => "Tugas '{$task->title}' telah melewati batas waktu (Deadline: {$task->due_date->format('d M Y')}).",
+                'type'       => 'overdue',
+                'is_read'    => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ])
+            ->values()
+            ->all();
+
+        if (!empty($notifications)) {
+            Notification::insert($notifications);
+        }
+
+        $this->info("Marked {$overdueTasks->count()} tasks as overdue.");
     }
 }

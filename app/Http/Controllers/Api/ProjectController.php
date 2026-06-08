@@ -51,7 +51,10 @@ class ProjectController extends Controller
     {
         $project->load([
             'creator:id,name,email',
-            'timelines.requirements'
+            'timelines' => function ($q) {
+                $q->withCount('requirements')
+                  ->orderBy('start_date');
+            }
         ]);
 
         return response()->json($project);

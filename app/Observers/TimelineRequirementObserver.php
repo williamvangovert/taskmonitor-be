@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\TimelineRequirement;
+use Illuminate\Support\Facades\Cache;
 
 class TimelineRequirementObserver
 {
@@ -13,6 +14,7 @@ class TimelineRequirementObserver
     {
         if ($timelineRequirement->timeline) {
             $timelineRequirement->timeline->recalculateProgress();
+            Cache::forget('dashboard_stats');
         }
     }
 
@@ -23,6 +25,7 @@ class TimelineRequirementObserver
     {
         if ($timelineRequirement->timeline) {
             $timelineRequirement->timeline->recalculateProgress();
+            Cache::forget('dashboard_stats');
         }
     }
 }
