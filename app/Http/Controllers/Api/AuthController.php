@@ -70,4 +70,10 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function users()
+    {
+        $users = User::select('id', 'name', 'email')->orderBy('name')->get();
+        return response()->json($users);
+    }
 }
