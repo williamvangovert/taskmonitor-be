@@ -30,6 +30,7 @@ class TimelineRequirementController extends Controller
             'end_date'    => 'nullable|date',
             'due_date'    => 'required|date',
             'priority'    => 'in:rendah,sedang,penting,mendesak',
+            'pic'         => 'nullable|string|max:255',
         ]);
 
         if (isset($validated['start_date'], $validated['end_date'])) {
@@ -65,6 +66,7 @@ class TimelineRequirementController extends Controller
             'status'              => 'in:pending,in_progress,completed,overdue',
             'progress_percentage' => 'integer|min:0|max:100',
             'is_completed'        => 'boolean',
+            'pic'                 => 'nullable|string|max:255',
         ]);
 
         if (isset($validated['is_completed']) && $validated['is_completed']) {

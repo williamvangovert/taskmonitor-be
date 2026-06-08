@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['timeline_id', 'title', 'description', 'assigned_to', 'start_date', 'end_date', 'due_date', 'duration_days', 'progress_percentage', 'priority', 'status', 'is_completed', 'completed_at', 'created_by'])]
+#[Fillable(['timeline_id', 'title', 'description', 'assigned_to', 'start_date', 'end_date', 'due_date', 'duration_days', 'progress_percentage', 'priority', 'status', 'is_completed', 'completed_at', 'created_by', 'pic'])]
 class TimelineRequirement extends Model
 {
     protected $casts = [

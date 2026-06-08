@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['project_id', 'title', 'description', 'start_date', 'end_date', 'duration_days', 'priority', 'progress_percentage', 'status', 'created_by'])]
+#[Fillable(['project_id', 'title', 'description', 'start_date', 'end_date', 'duration_days', 'priority', 'progress_percentage', 'status', 'created_by', 'pic'])]
 class ProjectTimeline extends Model
 {
     public function project(): BelongsTo
