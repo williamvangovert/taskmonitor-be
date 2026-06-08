@@ -16,9 +16,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         \App\Models\User::updateOrCreate(
-            ['email' => 'williamvangovert@gmail.com'],
+            ['email' => 'hcisa2@gmail.com'],
             [
-                'name'     => 'William Vangovert',
+                'name'     => 'HCISA',
                 'password' => \Illuminate\Support\Facades\Hash::make('taskmonitor'),
                 'role'     => 'super_admin',
             ]
