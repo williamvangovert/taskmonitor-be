@@ -7,17 +7,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['title', 'description', 'start_date', 'end_date', 'priority', 'progress_percentage', 'status', 'created_by', 'pic_id'])]
+#[Fillable(['title', 'description', 'start_date', 'end_date', 'priority', 'progress_percentage', 'status', 'created_by', 'pic'])]
 class Project extends Model
 {
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function pic(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'pic_id');
     }
 
     public function timelines(): HasMany

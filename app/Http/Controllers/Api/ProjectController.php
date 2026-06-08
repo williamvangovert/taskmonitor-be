@@ -12,7 +12,6 @@ class ProjectController extends Controller
     {
         $query = Project::with([
             'creator:id,name,email',
-            'pic:id,name,email',
             'timelines:id,project_id,title,status,end_date'
         ])->withCount(['timelines', 'requirements']);
 
@@ -38,15 +37,13 @@ class ProjectController extends Controller
             'end_date'    => 'required|date|after_or_equal:start_date',
             'priority'    => 'in:rendah,sedang,penting,mendesak',
             'status'      => 'in:pending,in_progress,completed,archived',
-            'pic_id'      => 'nullable|exists:users,id',
+            'pic'         => 'nullable|string|max:255',
         ]);
 
         $project = Project::create([
             ...$validated,
             'created_by' => auth()->id(),
         ]);
-
-        $project->load('pic:id,name,email');
 
         return response()->json($project, 201);
     }
@@ -55,7 +52,6 @@ class ProjectController extends Controller
     {
         $project->load([
             'creator:id,name,email',
-            'pic:id,name,email',
             'timelines' => function ($q) {
                 $q->withCount('requirements')
                   ->orderBy('start_date');
@@ -75,11 +71,10 @@ class ProjectController extends Controller
             'priority'            => 'in:rendah,sedang,penting,mendesak',
             'status'              => 'in:pending,in_progress,completed,archived',
             'progress_percentage' => 'integer|min:0|max:100',
-            'pic_id'              => 'nullable|exists:users,id',
+            'pic'                 => 'nullable|string|max:255',
         ]);
 
         $project->update($validated);
-        $project->load('pic:id,name,email');
 
         return response()->json($project);
     }
