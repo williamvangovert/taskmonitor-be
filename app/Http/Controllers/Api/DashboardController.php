@@ -29,7 +29,7 @@ class DashboardController extends Controller
             $completed = TimelineRequirement::where('is_completed', true)->count();
             
             $upcoming = TimelineRequirement::where('is_completed', false)
-                ->whereBetween('due_date', [now(), now()->addDays(7)])
+                ->whereBetween('due_date', [now(), now()->addDays(30)])
                 ->count();
 
             $critical = TimelineRequirement::where('is_completed', false)
@@ -106,7 +106,7 @@ class DashboardController extends Controller
                 'timeline.project:id,title',
                 'assignedUser:id,name,email'
             ])
-                ->whereBetween('due_date', [now(), now()->addDays(7)])
+                ->whereBetween('due_date', [now(), now()->addDays(30)])
                 ->where('is_completed', false)
                 ->orderBy('due_date')
                 ->limit(50) // ambil 50 saja
