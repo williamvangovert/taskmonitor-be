@@ -15,6 +15,11 @@ class ProjectTimeline extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function enhancement(): BelongsTo
+    {
+        return $this->belongsTo(ProjectEnhancement::class, 'enhancement_id');
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -50,6 +55,10 @@ class ProjectTimeline extends Model
         }
 
         $this->update($updateData);
+
+        if ($this->enhancement) {
+            $this->enhancement->recalculateProgress();
+        }
 
         if ($this->project) {
             $this->project->recalculateProgress();

@@ -53,8 +53,13 @@ class ProjectController extends Controller
         $project->load([
             'creator:id,name,email',
             'timelines' => function ($q) {
-                $q->withCount('requirements')
+                $q->whereNull('enhancement_id')
+                  ->withCount('requirements')
                   ->orderBy('start_date');
+            },
+            'enhancements' => function ($q) {
+                $q->withCount('timelines')
+                  ->orderByDesc('created_at');
             }
         ]);
 

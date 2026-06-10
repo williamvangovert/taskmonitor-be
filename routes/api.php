@@ -31,6 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Projects
     Route::apiResource('projects', ProjectController::class);
     
+    // Project Enhancements (Nested under Project)
+    Route::apiResource('projects.enhancements', \App\Http\Controllers\Api\ProjectEnhancementController::class);
+    
     // Project Timelines (Nested under Project)
     Route::apiResource('projects.timelines', ProjectTimelineController::class);
     

@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['title', 'description', 'start_date', 'end_date', 'priority', 'progress_percentage', 'status', 'created_by', 'pic'])]
-class Project extends Model
+#[Fillable(['project_id', 'title', 'description', 'status', 'progress_percentage', 'created_by', 'pic'])]
+class ProjectEnhancement extends Model
 {
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -17,17 +22,7 @@ class Project extends Model
 
     public function timelines(): HasMany
     {
-        return $this->hasMany(ProjectTimeline::class);
-    }
-
-    public function enhancements(): HasMany
-    {
-        return $this->hasMany(ProjectEnhancement::class);
-    }
-
-    public function requirements(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
-    {
-        return $this->hasManyThrough(TimelineRequirement::class, ProjectTimeline::class, 'project_id', 'timeline_id');
+        return $this->hasMany(ProjectTimeline::class, 'enhancement_id');
     }
 
     public function recalculateProgress(): void
@@ -39,7 +34,7 @@ class Project extends Model
         $progress = ($stats->total > 0)
             ? (int) round($stats->avg_progress)
             : 0;
-            
+
         $updateData = ['progress_percentage' => $progress];
 
         if ($stats->total > 0) {

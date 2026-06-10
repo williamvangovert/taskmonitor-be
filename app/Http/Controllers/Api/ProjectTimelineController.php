@@ -29,6 +29,7 @@ class ProjectTimelineController extends Controller
             'end_date'    => 'required|date|after_or_equal:start_date',
             'priority'    => 'in:rendah,sedang,penting,mendesak',
             'pic'         => 'nullable|string|max:255',
+            'enhancement_id' => 'nullable|exists:project_enhancements,id',
         ]);
 
         $validated['duration_days'] = now()->parse($validated['start_date'])
@@ -60,9 +61,14 @@ class ProjectTimelineController extends Controller
             'status'              => 'in:pending,in_progress,completed,overdue',
             'progress_percentage' => 'integer|min:0|max:100',
             'pic'                 => 'nullable|string|max:255',
+            'enhancement_id'      => 'nullable|exists:project_enhancements,id',
         ]);
 
         $timeline->update($validated);
+
+        if ($timeline->enhancement) {
+            $timeline->enhancement->recalculateProgress();
+        }
         $timeline->project->recalculateProgress();
 
         return response()->json($timeline);
@@ -70,7 +76,12 @@ class ProjectTimelineController extends Controller
 
     public function destroy(Project $project, ProjectTimeline $timeline)
     {
+        $enhancement = $timeline->enhancement;
         $timeline->delete();
+        
+        if ($enhancement) {
+            $enhancement->recalculateProgress();
+        }
         $project->recalculateProgress();
 
         return response()->json(['message' => 'Timeline berhasil dihapus.']);
