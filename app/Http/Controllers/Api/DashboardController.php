@@ -146,4 +146,49 @@ public function critical()
 
     return response()->json($data);
 }
+
+public function picPerformance()
+{
+    $data = Cache::remember('dashboard_pic_performance', 60, function () {
+        $pics = [];
+
+        $processRows = function ($rows) use (&$pics) {
+            foreach ($rows as $row) {
+                // Normalize PIC name
+                $picName = trim(ucwords(strtolower($row->pic)));
+                if (empty($picName)) continue;
+
+                if (!isset($pics[$picName])) {
+                    $pics[$picName] = [
+                        'name' => $picName,
+                        'total' => 0,
+                        'completed' => 0,
+                        'not_completed' => 0,
+                    ];
+                }
+
+                $pics[$picName]['total']++;
+                if ($row->status === 'completed') {
+                    $pics[$picName]['completed']++;
+                } else {
+                    $pics[$picName]['not_completed']++;
+                }
+            }
+        };
+
+        $processRows(DB::table('projects')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
+        $processRows(DB::table('project_enhancements')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
+        $processRows(DB::table('project_timelines')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
+        $processRows(DB::table('timeline_requirements')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
+
+        $result = array_values($pics);
+        usort($result, function($a, $b) {
+            return $b['total'] <=> $a['total'];
+        });
+
+        return $result;
+    });
+
+    return response()->json($data);
+}
 }

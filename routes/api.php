@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/overdue', [DashboardController::class, 'overdue']);
     Route::get('/dashboard/upcoming', [DashboardController::class, 'upcoming']);
     Route::get('/dashboard/critical', [DashboardController::class, 'critical']);
+    Route::get('/dashboard/pic-performance', [DashboardController::class, 'picPerformance']);
 
     // Projects
     Route::apiResource('projects', ProjectController::class);
