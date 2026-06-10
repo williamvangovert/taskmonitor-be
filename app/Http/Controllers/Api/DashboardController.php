@@ -1,4 +1,18 @@
-public function stats()
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Project;
+use App\Models\ProjectTimeline;
+use App\Models\TimelineRequirement;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+
+class DashboardController extends Controller
+{
+    public function stats()
 {
     $data = Cache::remember('dashboard_stats', 60, function () {
         $statusCounts = TimelineRequirement::selectRaw('status, count(*) as count')
@@ -131,4 +145,5 @@ public function critical()
     });
 
     return response()->json($data);
+}
 }
