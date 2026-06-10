@@ -176,9 +176,6 @@ public function picPerformance()
             }
         };
 
-        $processRows(DB::table('projects')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
-        $processRows(DB::table('project_enhancements')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
-        $processRows(DB::table('project_timelines')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
         $processRows(DB::table('timeline_requirements')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
 
         $result = array_values($pics);
