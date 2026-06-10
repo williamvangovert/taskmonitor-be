@@ -28,7 +28,7 @@ class ProjectTimeline extends Model
     public function recalculateProgress(): void
     {
         $stats = $this->requirements()
-            ->selectRaw('COUNT(*) as total, AVG(progress_percentage) as avg_progress, SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed_count, SUM(CASE WHEN status != "pending" THEN 1 ELSE 0 END) as not_pending_count')
+            ->selectRaw("COUNT(*) as total, AVG(progress_percentage) as avg_progress, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count, SUM(CASE WHEN status != 'pending' THEN 1 ELSE 0 END) as not_pending_count")
             ->first();
 
         $progress = ($stats->total > 0)
