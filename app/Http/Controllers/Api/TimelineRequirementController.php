@@ -43,6 +43,8 @@ class TimelineRequirementController extends Controller
             'created_by' => auth()->id(),
         ]);
 
+        $timeline->recalculateProgress();
+
         return response()->json($requirement, 201);
     }
 
@@ -77,12 +79,7 @@ class TimelineRequirementController extends Controller
 
         $requirement->update($validated);
         
-        // Auto update project status if requirement is in_progress
-        if ($requirement->status === 'in_progress') {
-            \App\Models\Project::where('id', $timeline->project_id)
-                ->where('status', 'pending')
-                ->update(['status' => 'in_progress']);
-        }
+        $timeline->recalculateProgress();
 
         return response()->json($requirement);
     }
@@ -90,6 +87,7 @@ class TimelineRequirementController extends Controller
     public function destroy(ProjectTimeline $timeline, TimelineRequirement $requirement)
     {
         $requirement->delete();
+        $timeline->recalculateProgress();
         return response()->json(['message' => 'Requirement berhasil dihapus.']);
     }
 }
