@@ -152,31 +152,60 @@ public function picPerformance()
     $data = Cache::remember('dashboard_pic_performance', 60, function () {
         $pics = [];
 
-        $processRows = function ($rows) use (&$pics) {
-            foreach ($rows as $row) {
-                // Normalize PIC name
-                $picName = trim(ucwords(strtolower($row->pic)));
-                if (empty($picName)) continue;
+        $requirements = DB::table('timeline_requirements as r')
+            ->join('project_timelines as t', 'r.timeline_id', '=', 't.id')
+            ->join('projects as p', 't.project_id', '=', 'p.id')
+            ->whereNotNull('r.pic')
+            ->where('r.pic', '!=', '')
+            ->select(
+                'r.id',
+                'r.pic',
+                'r.title',
+                'r.status',
+                'r.due_date',
+                'r.timeline_id',
+                't.title as timeline_title',
+                'p.id as project_id',
+                'p.title as project_title'
+            )
+            ->orderBy('r.due_date')
+            ->get();
 
-                if (!isset($pics[$picName])) {
-                    $pics[$picName] = [
-                        'name' => $picName,
-                        'total' => 0,
-                        'completed' => 0,
-                        'not_completed' => 0,
-                    ];
-                }
+        foreach ($requirements as $row) {
+            $picName = trim(ucwords(strtolower($row->pic)));
+            if (empty($picName)) continue;
 
-                $pics[$picName]['total']++;
-                if ($row->status === 'completed') {
-                    $pics[$picName]['completed']++;
-                } else {
-                    $pics[$picName]['not_completed']++;
-                }
+            if (!isset($pics[$picName])) {
+                $pics[$picName] = [
+                    'name'          => $picName,
+                    'total'         => 0,
+                    'completed'     => 0,
+                    'not_completed' => 0,
+                    'tasks_completed'     => [],
+                    'tasks_not_completed' => [],
+                ];
             }
-        };
 
-        $processRows(DB::table('timeline_requirements')->whereNotNull('pic')->where('pic', '!=', '')->select('pic', 'status')->get());
+            $taskEntry = [
+                'id'             => $row->id,
+                'title'          => $row->title,
+                'status'         => $row->status,
+                'due_date'       => $row->due_date,
+                'timeline_id'    => $row->timeline_id,
+                'timeline_title' => $row->timeline_title,
+                'project_id'     => $row->project_id,
+                'project_title'  => $row->project_title,
+            ];
+
+            $pics[$picName]['total']++;
+            if ($row->status === 'completed') {
+                $pics[$picName]['completed']++;
+                $pics[$picName]['tasks_completed'][] = $taskEntry;
+            } else {
+                $pics[$picName]['not_completed']++;
+                $pics[$picName]['tasks_not_completed'][] = $taskEntry;
+            }
+        }
 
         $result = array_values($pics);
         usort($result, function($a, $b) {
