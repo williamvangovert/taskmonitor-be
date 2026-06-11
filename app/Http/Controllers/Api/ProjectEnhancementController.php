@@ -37,7 +37,12 @@ class ProjectEnhancementController extends Controller
 
     public function show(Project $project, ProjectEnhancement $enhancement)
     {
-        $enhancement->load('timelines.requirements');
+        $enhancement->load([
+            'timelines' => function ($q) {
+                $q->orderBy('start_date')->orderBy('id');
+            },
+            'timelines.requirements',
+        ]);
         return response()->json($enhancement);
     }
 

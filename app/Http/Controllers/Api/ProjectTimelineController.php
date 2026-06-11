@@ -14,6 +14,7 @@ class ProjectTimelineController extends Controller
     $timelines = $project->timelines()
         ->withCount('requirements')
         ->orderBy('start_date')
+        ->orderBy('id')
         ->limit(100) // tambah limit
         ->get();
 
