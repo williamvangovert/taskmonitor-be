@@ -13,6 +13,7 @@ class ProjectEnhancementController extends Controller
     {
         $enhancements = $project->enhancements()
             ->withCount('timelines')
+            ->orderBy('created_at')
             ->get();
 
         return response()->json($enhancements);
@@ -39,9 +40,10 @@ class ProjectEnhancementController extends Controller
     {
         $enhancement->load([
             'timelines' => function ($q) {
-                $q->orderBy('start_date')->orderBy('id');
+                $q->withCount('requirements')
+                  ->orderBy('start_date')
+                  ->orderBy('id');
             },
-            'timelines.requirements',
         ]);
         return response()->json($enhancement);
     }

@@ -60,7 +60,7 @@ class ProjectController extends Controller
             },
             'enhancements' => function ($q) {
                 $q->withCount('timelines')
-                  ->orderByDesc('created_at');
+                  ->orderBy('created_at');
             }
         ]);
 
