@@ -55,7 +55,7 @@ class ProjectController extends Controller
             'timelines' => function ($q) {
                 $q->whereNull('enhancement_id')
                   ->withCount('requirements')
-                  ->orderBy('start_date')
+                  ->orderBy('created_at')
                   ->orderBy('id');
             },
             'enhancements' => function ($q) {

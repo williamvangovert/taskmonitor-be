@@ -41,7 +41,7 @@ class ProjectEnhancementController extends Controller
         $enhancement->load([
             'timelines' => function ($q) {
                 $q->withCount('requirements')
-                  ->orderBy('start_date')
+                  ->orderBy('created_at')
                   ->orderBy('id');
             },
         ]);
