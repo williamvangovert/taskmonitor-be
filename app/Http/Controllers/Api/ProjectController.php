@@ -23,7 +23,12 @@ class ProjectController extends Controller
             }
         }
 
-        $projects = $query->orderByDesc('created_at')->paginate(10);
+        $limit = $request->input('limit', 10);
+        if ($limit === 'all') {
+            $limit = 1000; // Return up to 1000 projects to simulate 'all' while preserving pagination structure
+        }
+
+        $projects = $query->orderByDesc('created_at')->paginate($limit);
 
         return response()->json($projects);
     }
