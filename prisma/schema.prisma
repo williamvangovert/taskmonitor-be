@@ -1,3 +1,12 @@
+// TaskMonitor — Prisma schema (PostgreSQL / Neon)
+// Verified against the live database via `prisma db pull`.
+//
+// NOTE: `prisma db pull` strips application-level defaults, so @default(now())
+// on created_at fields is re-added by hand below. If you re-run db pull, add it
+// back on the 7 domain models (users, departments, projects,
+// project_enhancements, project_timelines, timeline_requirements,
+// notifications) so timestamps + creation-order sorting keep working.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,7 +23,7 @@ model User {
   emailVerifiedAt      DateTime?             @map("email_verified_at") @db.Timestamp(0)
   password             String                @db.VarChar(255)
   rememberToken        String?               @map("remember_token") @db.VarChar(100)
-  createdAt            DateTime?             @map("created_at") @db.Timestamp(0)
+  createdAt            DateTime?             @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt            DateTime?             @updatedAt @map("updated_at") @db.Timestamp(0)
   role                 String                @default("staff") @db.VarChar(255)
   departmentId         BigInt?               @map("department_id")
@@ -35,7 +44,7 @@ model Department {
   id          BigInt    @id @default(autoincrement())
   name        String    @db.VarChar(255)
   description String?
-  createdAt   DateTime? @map("created_at") @db.Timestamp(0)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt   DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
   users       User[]
 
@@ -52,7 +61,7 @@ model Project {
   progressPercentage Int                  @default(0) @map("progress_percentage") @db.SmallInt
   status             String               @default("pending") @db.VarChar(255)
   createdBy          BigInt               @map("created_by")
-  createdAt          DateTime?            @map("created_at") @db.Timestamp(0)
+  createdAt          DateTime?            @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt          DateTime?            @updatedAt @map("updated_at") @db.Timestamp(0)
   pic                String?              @db.VarChar(255)
   enhancements       ProjectEnhancement[]
@@ -71,7 +80,7 @@ model ProjectEnhancement {
   progressPercentage Int               @default(0) @map("progress_percentage")
   createdBy          BigInt?           @map("created_by")
   pic                String?           @db.VarChar(255)
-  createdAt          DateTime?         @map("created_at") @db.Timestamp(0)
+  createdAt          DateTime?         @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt          DateTime?         @updatedAt @map("updated_at") @db.Timestamp(0)
   creator            User?             @relation("EnhancementCreator", fields: [createdBy], references: [id], onUpdate: NoAction, map: "project_enhancements_created_by_foreign")
   project            Project           @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_enhancements_project_id_foreign")
@@ -92,7 +101,7 @@ model ProjectTimeline {
   progressPercentage Int                   @default(0) @map("progress_percentage") @db.SmallInt
   status             String                @default("pending") @db.VarChar(255)
   createdBy          BigInt                @map("created_by")
-  createdAt          DateTime?             @map("created_at") @db.Timestamp(0)
+  createdAt          DateTime?             @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt          DateTime?             @updatedAt @map("updated_at") @db.Timestamp(0)
   pic                String?               @db.VarChar(255)
   enhancementId      BigInt?               @map("enhancement_id")
@@ -121,7 +130,7 @@ model TimelineRequirement {
   isCompleted        Boolean         @default(false) @map("is_completed")
   completedAt        DateTime?       @map("completed_at") @db.Timestamp(0)
   createdBy          BigInt          @map("created_by")
-  createdAt          DateTime?       @map("created_at") @db.Timestamp(0)
+  createdAt          DateTime?       @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt          DateTime?       @updatedAt @map("updated_at") @db.Timestamp(0)
   pic                String?         @db.VarChar(255)
   assignedUser       User?           @relation("RequirementAssignee", fields: [assignedTo], references: [id], onUpdate: NoAction, map: "timeline_requirements_assigned_to_foreign")
@@ -144,7 +153,7 @@ model Notification {
   message   String
   type      String    @default("reminder") @db.VarChar(255)
   isRead    Boolean   @default(false) @map("is_read")
-  createdAt DateTime? @map("created_at") @db.Timestamp(0)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "notifications_user_id_foreign")
 
