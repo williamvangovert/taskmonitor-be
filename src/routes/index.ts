@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import authRoutes from './auth.routes';
+import dashboardRoutes from './dashboard.routes';
 import enhancementRoutes from './enhancement.routes';
 import projectRoutes from './project.routes';
 import requirementRoutes from './requirement.routes';
@@ -19,12 +20,13 @@ router.use(authRoutes);
 // Everything below requires a valid Bearer JWT.
 const protectedRouter = Router();
 protectedRouter.use(authenticate);
+protectedRouter.use('/dashboard', dashboardRoutes);
 protectedRouter.use('/projects', projectRoutes);
 protectedRouter.use('/projects/:projectId/enhancements', enhancementRoutes);
 protectedRouter.use('/projects/:projectId/timelines', timelineRoutes);
 protectedRouter.use('/timelines/:timelineId/requirements', requirementRoutes);
 router.use(protectedRouter);
 
-// Still to come: dashboard (Stage 5), notifications (Stage 6).
+// Still to come: notifications (Stage 6).
 
 export default router;
