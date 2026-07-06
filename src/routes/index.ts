@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth';
 import authRoutes from './auth.routes';
 import dashboardRoutes from './dashboard.routes';
 import enhancementRoutes from './enhancement.routes';
+import notificationRoutes from './notification.routes';
 import projectRoutes from './project.routes';
 import requirementRoutes from './requirement.routes';
 import timelineRoutes from './timeline.routes';
@@ -25,8 +26,7 @@ protectedRouter.use('/projects', projectRoutes);
 protectedRouter.use('/projects/:projectId/enhancements', enhancementRoutes);
 protectedRouter.use('/projects/:projectId/timelines', timelineRoutes);
 protectedRouter.use('/timelines/:timelineId/requirements', requirementRoutes);
+protectedRouter.use('/notifications', notificationRoutes);
 router.use(protectedRouter);
-
-// Still to come: notifications (Stage 6).
 
 export default router;
