@@ -37,8 +37,10 @@ export const projectUpdateSchema = z.object({
 });
 
 export async function index(req: Request, res: Response): Promise<void> {
-  const page = Math.max(parseInt(String(req.query.page ?? '1'), 10) || 1, 1);
   const status = String(req.query.status ?? 'all');
+  // The dashboard requests ?limit=all to show every project (single page).
+  const returnAll = String(req.query.limit ?? '') === 'all';
+  const page = Math.max(parseInt(String(req.query.page ?? '1'), 10) || 1, 1);
   const perPage = 10;
 
   const where: Record<string, unknown> = {};
@@ -55,8 +57,7 @@ export async function index(req: Request, res: Response): Promise<void> {
   const projects = await prisma.project.findMany({
     where,
     orderBy: { createdAt: 'desc' },
-    skip: (page - 1) * perPage,
-    take: perPage,
+    ...(returnAll ? {} : { skip: (page - 1) * perPage, take: perPage }),
     include: {
       creator: { select: { id: true, name: true, email: true } },
       timelines: { select: { id: true, projectId: true, title: true, status: true, endDate: true } },
@@ -73,7 +74,10 @@ export async function index(req: Request, res: Response): Promise<void> {
     }),
   );
 
-  res.json(paginate(data, { page, perPage, total, path: '/projects' }));
+  const meta = returnAll
+    ? { page: 1, perPage: Math.max(total, 1), total, path: '/projects' }
+    : { page, perPage, total, path: '/projects' };
+  res.json(paginate(data, meta));
 }
 
 export async function store(req: Request, res: Response): Promise<void> {
