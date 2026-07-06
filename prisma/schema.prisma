@@ -1,0 +1,163 @@
+// TaskMonitor — Prisma schema
+// Reconstructed from the Laravel migrations in database/migrations/.
+// Database: PostgreSQL (Neon).
+//
+// After checking out this branch, verify this schema against the LIVE database:
+//   npx prisma db pull      # introspect the existing Neon DB (read-only, safe)
+//   npx prisma generate     # generate the Prisma client
+//
+// NOTE: Laravel enum() columns are stored in PostgreSQL as VARCHAR + CHECK
+// constraints, so they are modelled here as String (this matches what
+// `prisma db pull` produces). Allowed values are noted in comments.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              BigInt    @id @default(autoincrement())
+  name            String
+  email           String    @unique
+  role            String    @default("staff") // super_admin | admin | manager | staff
+  departmentId    BigInt?   @map("department_id")
+  avatar          String?
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamp(0)
+  password        String
+  rememberToken   String?   @map("remember_token") @db.VarChar(100)
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  department           Department?           @relation(fields: [departmentId], references: [id])
+  createdProjects      Project[]             @relation("ProjectCreator")
+  createdTimelines     ProjectTimeline[]     @relation("TimelineCreator")
+  createdEnhancements  ProjectEnhancement[]  @relation("EnhancementCreator")
+  assignedRequirements TimelineRequirement[] @relation("RequirementAssignee")
+  createdRequirements  TimelineRequirement[] @relation("RequirementCreator")
+  notifications        Notification[]
+
+  @@map("users")
+}
+
+model Department {
+  id          BigInt    @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  users User[]
+
+  @@map("departments")
+}
+
+model Project {
+  id                 BigInt    @id @default(autoincrement())
+  title              String
+  description        String?   @db.Text
+  startDate          DateTime  @map("start_date") @db.Date
+  endDate            DateTime  @map("end_date") @db.Date
+  priority           String    @default("sedang") // rendah | sedang | penting | mendesak
+  progressPercentage Int       @default(0) @map("progress_percentage")
+  status             String    @default("pending") // pending | in_progress | completed | archived
+  createdBy          BigInt    @map("created_by")
+  pic                String?
+  createdAt          DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  creator      User                 @relation("ProjectCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  timelines    ProjectTimeline[]
+  enhancements ProjectEnhancement[]
+
+  @@map("projects")
+}
+
+model ProjectEnhancement {
+  id                 BigInt    @id @default(autoincrement())
+  projectId          BigInt    @map("project_id")
+  title              String
+  description        String?   @db.Text
+  status             String    @default("pending") // pending | in_progress | completed | overdue
+  progressPercentage Int       @default(0) @map("progress_percentage")
+  createdBy          BigInt?   @map("created_by")
+  pic                String?
+  createdAt          DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator   User?             @relation("EnhancementCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  timelines ProjectTimeline[]
+
+  @@map("project_enhancements")
+}
+
+model ProjectTimeline {
+  id                 BigInt    @id @default(autoincrement())
+  projectId          BigInt    @map("project_id")
+  enhancementId      BigInt?   @map("enhancement_id")
+  title              String
+  description        String?   @db.Text
+  startDate          DateTime  @map("start_date") @db.Date
+  endDate            DateTime  @map("end_date") @db.Date
+  durationDays       Int       @default(0) @map("duration_days")
+  priority           String    @default("sedang") // rendah | sedang | penting | mendesak
+  progressPercentage Int       @default(0) @map("progress_percentage")
+  status             String    @default("pending") // pending | in_progress | completed | overdue
+  createdBy          BigInt    @map("created_by")
+  pic                String?
+  createdAt          DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  project      Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  enhancement  ProjectEnhancement?   @relation(fields: [enhancementId], references: [id], onDelete: SetNull)
+  creator      User                  @relation("TimelineCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  requirements TimelineRequirement[]
+
+  @@map("project_timelines")
+}
+
+model TimelineRequirement {
+  id                 BigInt    @id @default(autoincrement())
+  timelineId         BigInt    @map("timeline_id")
+  title              String
+  description        String?   @db.Text
+  assignedTo         BigInt?   @map("assigned_to")
+  startDate          DateTime? @map("start_date") @db.Date
+  endDate            DateTime? @map("end_date") @db.Date
+  dueDate            DateTime  @map("due_date") @db.Date
+  durationDays       Int       @default(0) @map("duration_days")
+  progressPercentage Int       @default(0) @map("progress_percentage")
+  priority           String    @default("sedang") // rendah | sedang | penting | mendesak
+  status             String    @default("pending") // pending | in_progress | review | completed | overdue
+  isCompleted        Boolean   @default(false) @map("is_completed")
+  completedAt        DateTime? @map("completed_at") @db.Timestamp(0)
+  createdBy          BigInt    @map("created_by")
+  pic                String?
+  createdAt          DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  timeline     ProjectTimeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  assignedUser User?           @relation("RequirementAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  creator      User            @relation("RequirementCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("timeline_requirements")
+}
+
+model Notification {
+  id        BigInt    @id @default(autoincrement())
+  userId    BigInt    @map("user_id")
+  title     String
+  message   String    @db.Text
+  type      String    @default("reminder") // reminder | overdue | assignment | progress | mention
+  isRead    Boolean   @default(false) @map("is_read")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
