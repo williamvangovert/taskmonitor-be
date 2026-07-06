@@ -20,61 +20,51 @@ Tujuan utama: **menjaga kontrak API tetap identik** (URL, method, bentuk JSON) a
 ```bash
 npm install
 cp .env.example .env   # isi DATABASE_URL (Neon, pooled, sslmode=require) + JWT_SECRET
-npx prisma generate    # (jalankan prisma db pull sekali untuk verifikasi jika perlu)
+npx prisma generate
 npm run dev
 ```
 
 Server berjalan di `http://127.0.0.1:8000/api` (port 8000 agar cocok dengan `VITE_API_URL` frontend).
 
-## Menguji auth (Tahap 3)
+## Menguji end-to-end lewat frontend
 
-```bash
-# Health
-curl http://127.0.0.1:8000/api/health
+1. Jalankan backend ini (`npm run dev`) — port 8000.
+2. Jalankan frontend secara lokal (`npm run dev` di repo `taskmonitor-fe`) — port 5173.
+3. Buka `http://localhost:5173`, login dengan akun yang ada, lalu coba:
+   - Halaman **Projects**: lihat daftar, buka detail, buat/edit/hapus project.
+   - **Enhancement** & **Timeline**: buat, urutkan (berdasarkan waktu buat), lihat `requirements_count`.
+   - **Requirements**: tambah/edit/tandai selesai → progress timeline/enhancement/project ikut terhitung ulang.
 
-# Login dengan user yang SUDAH ADA di database (password lama tetap berlaku)
-curl -X POST http://127.0.0.1:8000/api/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"EMAIL_ANDA","password":"PASSWORD_ANDA"}'
-# -> { "user": {...}, "token": "..." }
+> Catatan: **Dashboard** dan **Notifikasi** belum ada sampai Tahap 5–6, jadi halaman itu mungkin masih kosong/error — itu wajar untuk sekarang.
 
-# Ambil profil dengan token dari langkah sebelumnya
-curl http://127.0.0.1:8000/api/me -H 'Authorization: Bearer TOKEN_DISINI'
-```
+## Endpoint yang sudah tersedia
 
-Atau langsung dari frontend: jalankan frontend, buka halaman Login, dan coba login memakai akun yang ada. Password lama tetap bekerja (hash bcrypt Laravel kompatibel).
-
-## Struktur
-
-```
-prisma/schema.prisma   # skema DB (terverifikasi via prisma db pull)
-src/
-  server.ts            # entry point
-  app.ts               # Express: CORS, JSON, snake_case output, /api, error handler
-  config/env.ts        # environment variable terpusat
-  lib/prisma.ts        # Prisma client (BigInt -> number)
-  lib/cache.ts         # cache TTL in-memory (untuk dashboard)
-  middleware/          # auth (JWT), validate (Zod), errorHandler
-  utils/               # jwt, password (bcrypt), case (snake_case), pagination, asyncHandler
-  controllers/         # auth.controller
-  routes/              # index (+ /health), auth.routes
-```
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| POST | /api/register, /api/login | → { user, token } |
+| GET | /api/me, /api/users | perlu Bearer token |
+| POST | /api/logout | perlu Bearer token |
+| GET/POST | /api/projects | list (paginasi) / buat |
+| GET/PUT/DELETE | /api/projects/:id | detail / ubah / hapus |
+| … | /api/projects/:projectId/enhancements | CRUD enhancement |
+| … | /api/projects/:projectId/timelines | CRUD timeline |
+| … | /api/timelines/:timelineId/requirements | CRUD requirement |
 
 ## Catatan penting
 
-- **snake_case:** semua respons otomatis diubah ke snake_case agar cocok dengan output Laravel lama (frontend tidak berubah).
-- **Auth:** JWT via header `Authorization: Bearer`. Login/registrasi balas `{ user, token }`. Kredensial salah balas **422** `{ message, errors }` (bukan 401), sesuai Laravel.
-- **Password lama tetap valid:** hash `$2y$` dari Laravel dinormalisasi ke `$2b$` untuk verifikasi bcryptjs.
-- **`prisma db pull` menghapus `@default(now())`** dari `created_at`. Sudah dikembalikan manual di `schema.prisma`; jika Anda menjalankan db pull lagi, tambahkan kembali.
-- **`.env` tidak pernah di-commit** (ada di `.gitignore`).
+- **snake_case:** semua respons otomatis diubah ke snake_case agar cocok dengan Laravel (frontend tidak berubah).
+- **Progress bertingkat:** perubahan requirement memicu perhitungan ulang progress timeline → enhancement → project (sama seperti Laravel).
+- **Password lama valid:** hash `$2y$` Laravel dinormalisasi ke `$2b$` untuk verifikasi.
+- **Database sama (Neon):** operasi tulis saat menguji akan memengaruhi data yang sama dengan aplikasi live — gunakan data uji bila perlu.
+- **`prisma db pull`** menghapus `@default(now())` dari `created_at`; sudah dikembalikan manual di `schema.prisma`.
 
 ## Progress tahapan
 
-- [x] **Tahap 0** — Fondasi proyek (Express, TypeScript, health endpoint)
-- [x] **Tahap 1** — Skema Prisma (terverifikasi vs database Neon)
-- [x] **Tahap 2** — Infra inti (auth JWT, validasi Zod, snake_case, pagination, cache)
+- [x] **Tahap 0** — Fondasi proyek
+- [x] **Tahap 1** — Skema Prisma (terverifikasi vs Neon)
+- [x] **Tahap 2** — Infra inti (auth JWT, Zod, snake_case, pagination, cache)
 - [x] **Tahap 3** — Auth (register, login, logout, me, users)
-- [ ] **Tahap 4** — Projects, Enhancements, Timelines, Requirements (+ cascade recalculateProgress)
+- [x] **Tahap 4** — Projects, Enhancements, Timelines, Requirements (+ progress cascade)
 - [ ] **Tahap 5** — Dashboard (5 endpoint + cache 60 detik)
 - [ ] **Tahap 6** — Notifications
 - [ ] **Tahap 7** — Scheduler (cron: overdue check, deadline reminder)
