@@ -13,6 +13,10 @@ function camelToSnake(key: string): string {
  * Dates and other non-plain objects are left untouched.
  */
 export function snakeCaseKeys(value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+
   if (Array.isArray(value)) {
     return value.map(snakeCaseKeys);
   }
