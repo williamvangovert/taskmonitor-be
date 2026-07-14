@@ -91,7 +91,7 @@ export async function overdue(_req: Request, res: Response): Promise<void> {
       orderBy: { dueDate: 'asc' },
       take: 50,
     });
-    return rows.map((r) => ({ ...r, days_late: daysFromToday(r.dueDate) }));
+    return rows.map((r: (typeof rows)[number]) => ({ ...r, days_late: daysFromToday(r.dueDate) }));
   });
 
   res.json(data);
@@ -107,7 +107,7 @@ export async function upcoming(_req: Request, res: Response): Promise<void> {
       orderBy: { dueDate: 'asc' },
       take: 50,
     });
-    return rows.map((r) => ({ ...r, days_until: daysFromToday(r.dueDate) }));
+    return rows.map((r: (typeof rows)[number]) => ({ ...r, days_until: daysFromToday(r.dueDate) }));
   });
 
   res.json(data);
@@ -123,7 +123,7 @@ export async function critical(_req: Request, res: Response): Promise<void> {
       orderBy: { dueDate: 'asc' },
       take: 20,
     });
-    return rows.map((r) => ({ ...r, days_until: daysFromToday(r.dueDate) }));
+    return rows.map((r: (typeof rows)[number]) => ({ ...r, days_until: daysFromToday(r.dueDate) }));
   });
 
   res.json(data);

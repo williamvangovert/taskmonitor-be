@@ -66,7 +66,7 @@ export async function index(req: Request, res: Response): Promise<void> {
   });
 
   const data = await Promise.all(
-    projects.map(async (p) => {
+    projects.map(async (p: (typeof projects)[number]) => {
       const requirementsCount = await prisma.timelineRequirement.count({
         where: { timeline: { projectId: p.id } },
       });
