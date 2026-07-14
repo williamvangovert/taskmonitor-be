@@ -9,17 +9,25 @@ import { snakeCaseKeys } from './utils/case';
 export function createApp() {
   const app = express();
 
-  // The frontend talks to this API from a different origin using Bearer tokens
-  // (no cookies), so CORS must explicitly allow the configured origins and the
-  // Authorization header. Laravel handled this automatically; Express does not.
-  app.use(
-    cors({
-      origin: env.corsOrigins,
-      credentials: false,
-      allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    }),
-  );
+  const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (env.corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: Origin ${origin} not allowed`));
+    },
+    credentials: false,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  };
+
+  // Handle preflight OPTIONS for ALL routes before any other middleware.
+  app.options('*', cors(corsOptions));
+  app.use(cors(corsOptions));
 
   app.use(express.json());
 
