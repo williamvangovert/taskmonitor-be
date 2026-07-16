@@ -57,7 +57,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 }
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z.string(),
 });
 
