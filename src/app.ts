@@ -10,20 +10,53 @@ export function createApp() {
   const app = express();
 
   const corsOptions: cors.CorsOptions = {
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
-      if (env.corsOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error(`CORS: Origin ${origin} not allowed`));
-    },
-    credentials: false,
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  };
+  origin: (origin, callback) => {
+    // Request dari curl, Postman, mobile app, atau server-to-server
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+
+    console.log('CORS check:', {
+      receivedOrigin: normalizedOrigin,
+      allowedOrigins: env.corsOrigins,
+    });
+
+    if (env.corsOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    console.error('CORS rejected:', {
+      receivedOrigin: normalizedOrigin,
+      allowedOrigins: env.corsOrigins,
+    });
+
+    return callback(
+      new Error(`CORS: Origin ${normalizedOrigin} not allowed`)
+    );
+  },
+
+  credentials: false,
+
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+  ],
+
+  methods: [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+  ],
+
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
 
   // Handle preflight OPTIONS for ALL routes before any other middleware.
   app.options('*', cors(corsOptions));
@@ -47,4 +80,4 @@ export function createApp() {
   app.use(errorHandler);
 
   return app;
-}
+};
