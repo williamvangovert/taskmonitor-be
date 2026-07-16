@@ -1,7 +1,10 @@
 import cors from 'cors';
 import express from 'express';
 import { env } from './config/env';
-import { errorHandler, notFound } from './middleware/errorHandler';
+import {
+  errorHandler,
+  notFound,
+} from './middleware/errorHandler';
 import routes from './routes';
 import { snakeCaseKeys } from './utils/case';
 
@@ -10,74 +13,84 @@ export function createApp() {
   const app = express();
 
   const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    // Request dari curl, Postman, mobile app, atau server-to-server
-    if (!origin) {
-      return callback(null, true);
-    }
+    origin: (origin, callback) => {
+      // Mengizinkan curl, Postman, mobile app,
+      // dan komunikasi server-to-server.
+      if (!origin) {
+        return callback(null, true);
+      }
 
-    const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+      const normalizedOrigin = origin
+        .trim()
+        .replace(/\/+$/, '');
 
-    console.log('CORS check:', {
-      receivedOrigin: normalizedOrigin,
-      allowedOrigins: env.corsOrigins,
-    });
+      console.log('CORS check:', {
+        receivedOrigin: normalizedOrigin,
+        allowedOrigins: env.corsOrigins,
+      });
 
-    if (env.corsOrigins.includes(normalizedOrigin)) {
-      return callback(null, true);
-    }
+      if (env.corsOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
 
-    console.error('CORS rejected:', {
-      receivedOrigin: normalizedOrigin,
-      allowedOrigins: env.corsOrigins,
-    });
+      console.error('CORS rejected:', {
+        receivedOrigin: normalizedOrigin,
+        allowedOrigins: env.corsOrigins,
+      });
 
-    return callback(
-      new Error(`CORS: Origin ${normalizedOrigin} not allowed`)
-    );
-  },
+      // Jangan melempar Error karena akan menjadi status 500.
+      return callback(null, false);
+    },
 
-  credentials: false,
+    credentials: false,
 
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'Accept',
-  ],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+    ],
 
-  methods: [
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE',
-    'OPTIONS',
-  ],
+    methods: [
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ],
 
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-};
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  };
 
-  // Handle preflight OPTIONS for ALL routes before any other middleware.
-  app.options('*', cors(corsOptions));
+  /*
+   * Penting:
+   * app.use(cors(...)) sudah menangani OPTIONS untuk semua route.
+   * Jangan tambahkan app.options('*', ...).
+   */
   app.use(cors(corsOptions));
 
   app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-  // Parity: the old Laravel API emitted snake_case JSON keys, but Prisma models
-  // use camelCase. Convert every JSON response back to snake_case so the React
-  // frontend keeps working unchanged.
+  // Mengubah response camelCase Prisma menjadi snake_case
+  // agar tetap kompatibel dengan frontend lama.
   app.use((_req, res, next) => {
     const originalJson = res.json.bind(res);
-    res.json = ((body: unknown) => originalJson(snakeCaseKeys(body))) as typeof res.json;
+
+    res.json = ((body: unknown) =>
+      originalJson(
+        snakeCaseKeys(body),
+      )) as typeof res.json;
+
     next();
   });
 
-  // The frontend axios baseURL ends in /api, so every route lives under /api.
+  // Semua endpoint tersedia di bawah /api.
   app.use('/api', routes);
 
   app.use(notFound);
   app.use(errorHandler);
 
   return app;
-};
+}
