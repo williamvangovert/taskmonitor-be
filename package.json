@@ -4,6 +4,7 @@
   "private": true,
   "description": "TaskMonitor backend API (Express + TypeScript + Prisma) — migrated from Laravel",
   "main": "dist/server.js",
+  "node": "22.x",
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "tsx watch src/server.ts",
@@ -14,6 +15,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "22": "^0.0.0",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
