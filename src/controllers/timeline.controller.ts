@@ -6,6 +6,7 @@ import { parseId, toBigIntOrNull } from '../utils/params';
 import { withRequirementsCount } from '../utils/serialize';
 import { diffInDays } from '../utils/dates';
 import { recalcEnhancement, recalcProject } from '../services/progress';
+import { forget } from '../lib/cache';
 
 const priorityEnum = z.enum(['rendah', 'sedang', 'penting', 'mendesak']);
 const statusEnum = z.enum(['pending', 'in_progress', 'completed', 'overdue']);
@@ -67,6 +68,7 @@ export async function store(req: Request, res: Response): Promise<void> {
       createdBy: req.user!.id,
     },
   });
+  forget('dashboard_stats');
   res.status(201).json(timeline);
 }
 
@@ -106,6 +108,7 @@ export async function update(req: Request, res: Response): Promise<void> {
 
   if (timeline.enhancementId) await recalcEnhancement(timeline.enhancementId);
   await recalcProject(timeline.projectId);
+  forget('dashboard_stats');
   res.json(timeline);
 }
 
@@ -120,5 +123,6 @@ export async function destroy(req: Request, res: Response): Promise<void> {
   await prisma.projectTimeline.delete({ where: { id } });
   if (timeline.enhancementId) await recalcEnhancement(timeline.enhancementId);
   await recalcProject(timeline.projectId);
+  forget('dashboard_stats');
   res.json({ message: 'Timeline berhasil dihapus.' });
 }

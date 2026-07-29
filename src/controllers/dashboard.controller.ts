@@ -25,6 +25,52 @@ const DEADLINE_INCLUDE = {
   assignedUser: { select: { id: true, name: true, email: true } },
 } as const;
 
+async function getRequirementBreakdown() {
+  const projects = await prisma.project.findMany({
+    select: {
+      id: true,
+      title: true,
+      timelines: {
+        orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
+        take: 1,
+        select: {
+          id: true,
+          title: true,
+          requirements: {
+            select: {
+              status: true,
+              isCompleted: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { title: 'asc' },
+  });
+
+  return projects
+    .map((project) => {
+      const requirementTimeline = project.timelines[0];
+      if (!requirementTimeline) return null;
+
+      const total = requirementTimeline.requirements.length;
+      const completed = requirementTimeline.requirements.filter(
+        (task) => task.isCompleted || task.status === 'completed',
+      ).length;
+
+      return {
+        projectId: project.id,
+        projectTitle: project.title,
+        timelineId: requirementTimeline.id,
+        timelineTitle: requirementTimeline.title,
+        total,
+        completed,
+        notCompleted: total - completed,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+}
+
 export async function stats(_req: Request, res: Response): Promise<void> {
   const data = await remember('dashboard_stats', 60, async () => {
     const now = new Date();
@@ -32,7 +78,7 @@ export async function stats(_req: Request, res: Response): Promise<void> {
     const in2 = new Date(now.getTime() + 2 * DAY_MS);
     const weekAgo = new Date(now.getTime() - 7 * DAY_MS);
 
-    const [statusGroups, priorityGroups, total, completed, upcoming, critical, overdueCount, totalProjects, activeTimelines, activeUsers] =
+    const [statusGroups, priorityGroups, total, completed, upcoming, critical, overdueCount, totalProjects, activeTimelines, activeUsers, requirementBreakdown] =
       await Promise.all([
         prisma.timelineRequirement.groupBy({ by: ['status'], _count: { _all: true } }),
         prisma.timelineRequirement.groupBy({ by: ['priority'], _count: { _all: true } }),
@@ -46,6 +92,7 @@ export async function stats(_req: Request, res: Response): Promise<void> {
         prisma.project.count(),
         prisma.projectTimeline.count({ where: { status: { in: ['pending', 'in_progress'] } } }),
         prisma.user.count({ where: { updatedAt: { gte: weekAgo } } }),
+        getRequirementBreakdown(),
       ]);
 
     const statusCounts: Record<string, number> = {};
@@ -54,6 +101,11 @@ export async function stats(_req: Request, res: Response): Promise<void> {
     for (const g of priorityGroups) priorityCounts[g.priority] = g._count._all;
 
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const totalRequirementTasks = requirementBreakdown.reduce((sum, project) => sum + project.total, 0);
+    const completedRequirementTasks = requirementBreakdown.reduce(
+      (sum, project) => sum + project.completed,
+      0,
+    );
 
     return {
       total_projects: totalProjects,
@@ -64,6 +116,10 @@ export async function stats(_req: Request, res: Response): Promise<void> {
       critical_deadlines: critical,
       completion_rate: rate,
       active_users: activeUsers,
+      total_requirement_tasks: totalRequirementTasks,
+      completed_requirement_tasks: completedRequirementTasks,
+      requirement_applications_count: requirementBreakdown.filter((project) => project.total > 0).length,
+      requirement_breakdown: requirementBreakdown,
       status_distribution: {
         pending: statusCounts.pending ?? 0,
         in_progress: statusCounts.in_progress ?? 0,

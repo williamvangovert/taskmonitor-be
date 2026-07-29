@@ -143,5 +143,5 @@ export async function destroy(req: Request, res: Response): Promise<void> {
   await prisma.timelineRequirement.delete({ where: { id } });
   await recalcTimeline(timelineId);
   invalidateDashboard();
-  res.json({ message: 'Requirement berhasil dihapus.' });
+  res.json({ message: 'Task berhasil dihapus.' });
 }
