@@ -32,10 +32,15 @@ async function getRequirementBreakdown() {
       title: true,
       timelines: {
         orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
-        take: 1,
         select: {
           id: true,
           title: true,
+          enhancement: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
           requirements: {
             select: {
               status: true,
@@ -50,25 +55,41 @@ async function getRequirementBreakdown() {
 
   return projects
     .map((project) => {
-      const requirementTimeline = project.timelines[0];
-      if (!requirementTimeline) return null;
+      const requirementTimelines = project.timelines.filter((timeline) => {
+        const normalizedTitle = timeline.title.trim().toLowerCase();
+        return normalizedTitle === 'requirement' || normalizedTitle === 'requirements';
+      });
 
-      const total = requirementTimeline.requirements.length;
-      const completed = requirementTimeline.requirements.filter(
-        (task) => task.isCompleted || task.status === 'completed',
-      ).length;
+      const groups = requirementTimelines.map((timeline) => {
+        const total = timeline.requirements.length;
+        const completed = timeline.requirements.filter(
+          (task) => task.isCompleted || task.status === 'completed',
+        ).length;
+
+        return {
+          enhancementId: timeline.enhancement?.id ?? null,
+          enhancementTitle: timeline.enhancement?.title ?? 'Tanpa enhancement',
+          timelineId: timeline.id,
+          timelineTitle: timeline.title,
+          total,
+          completed,
+          notCompleted: total - completed,
+        };
+      });
+
+      const total = groups.reduce((sum, group) => sum + group.total, 0);
+      const completed = groups.reduce((sum, group) => sum + group.completed, 0);
 
       return {
         projectId: project.id,
         projectTitle: project.title,
-        timelineId: requirementTimeline.id,
-        timelineTitle: requirementTimeline.title,
         total,
         completed,
         notCompleted: total - completed,
+        groups,
       };
     })
-    .filter((item): item is NonNullable<typeof item> => item !== null);
+    .filter((item) => item.groups.length > 0);
 }
 
 export async function stats(_req: Request, res: Response): Promise<void> {
