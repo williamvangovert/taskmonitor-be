@@ -120,11 +120,26 @@ export async function update(req: Request, res: Response): Promise<void> {
   if (body.pic !== undefined) data.pic = body.pic;
   if (body.is_completed !== undefined) data.isCompleted = body.is_completed;
 
-  // Mirror Laravel: marking complete also stamps completed_at / status / progress.
-  if (body.is_completed) {
-    data.completedAt = new Date();
+  const marksCompleted = body.status === 'completed' || body.is_completed === true;
+  const reopensTask =
+    (body.status !== undefined && body.status !== 'completed') ||
+    body.is_completed === false;
+
+  // Keep status, completion flag, timestamp, and progress in sync.
+  if (marksCompleted) {
+    data.completedAt = existing.completedAt ?? new Date();
     data.status = 'completed';
+    data.isCompleted = true;
     data.progressPercentage = 100;
+  } else if (reopensTask) {
+    data.completedAt = null;
+    data.isCompleted = false;
+    if (body.status === undefined && existing.status === 'completed') {
+      data.status = 'pending';
+    }
+    if (body.progress_percentage === undefined) {
+      data.progressPercentage = 0;
+    }
   }
 
   const requirement = await prisma.timelineRequirement.update({ where: { id }, data });
